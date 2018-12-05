@@ -26,7 +26,8 @@ import pkgHelper.PuzzleViolation;
  *
  */
 public class Sudoku extends LatinSquare implements Serializable {
-
+	private int mistakes;
+	private int zeroCnt;
 	/**
 	 * 
 	 * iSize - the length of the width/height of the Sudoku puzzle.
@@ -59,6 +60,7 @@ public class Sudoku extends LatinSquare implements Serializable {
 	 */
 	private Sudoku() {
 		super();
+		this.mistakes=0;
 		this.eGameDifficulty = eGameDifficulty.EASY;
 	}
 
@@ -89,12 +91,12 @@ public class Sudoku extends LatinSquare implements Serializable {
 
 		int[][] puzzle = new int[iSize][iSize];
 		super.setLatinSquare(puzzle);
-
+		
 		FillDiagonalRegions();
 		SetCells();
 		fillRemaining(this.cells.get(Objects.hash(0, iSqrtSize)));
 		RemoveCells();
-
+		this.zeroCnt = getZeroCount();
 	}
 
 	/**
@@ -111,6 +113,8 @@ public class Sudoku extends LatinSquare implements Serializable {
 		this(iSize);
 		this.eGameDifficulty = eGD;
 		RemoveCells();
+		this.zeroCnt = getZeroCount();
+
 	}
 
 	/**
@@ -126,18 +130,51 @@ public class Sudoku extends LatinSquare implements Serializable {
 	public Sudoku(int[][] puzzle) throws Exception {
 		super(puzzle);
 		this.iSize = puzzle.length;
+		this.mistakes = 0;
 		double SQRT = Math.sqrt(iSize);
 		if ((SQRT == Math.floor(SQRT)) && !Double.isInfinite(SQRT)) {
 			this.iSqrtSize = (int) SQRT;
 		} else {
 			throw new Exception("Invalid size");
 		}
-
+		
 	}
 
 	public int getiSqrtSize() {
 		return iSqrtSize;
 	}
+	
+	
+	
+	public int getMistakes() {
+		return mistakes;
+	}
+	public int getZeros() {
+		return zeroCnt;
+	}
+	public void addMistake() {
+		this.mistakes++;
+	}
+	public int getZeroCount() {
+		int cnt = 0;
+		for(int r = 0;r<iSize;r++) {
+			for(int c = 0; c<iSize;c++) {
+				if(super.getLatinSquare()[r][c]==0) {
+					cnt++;
+				}
+			}
+		}
+		return cnt;
+	}
+	public void removeZero() {
+		this.zeroCnt--;
+	}
+	public void addZero() {
+		this.zeroCnt++;
+	}
+	
+	
+	
 
 	/**
 	 * RemoveCells - this method will remove cells (set them to zero) until the

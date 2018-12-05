@@ -1,5 +1,8 @@
 package app.controller;
 
+import java.awt.Button;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -27,6 +30,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
@@ -59,6 +63,21 @@ public class SudokuController implements Initializable {
 
 	@FXML
 	private HBox hboxNumbers;
+	@FXML
+	private Label Winner;
+	@FXML 
+	private Label Loser;
+	@FXML
+	private HBox ResultBox;
+	@FXML
+	private GridPane result;
+	@FXML
+	private Label Lives;
+	@FXML
+	private Label NMLives;
+	@FXML
+	private Label LivesR;
+	
 
 	private int iCellSize = 45;
 	private static final DataFormat myFormat = new DataFormat("com.cisc181.Data.Cell");
@@ -86,6 +105,9 @@ public class SudokuController implements Initializable {
 	private void btnStartGame(ActionEvent event) {
 		CreateSudokuInstance();
 		BuildGrids();
+		Winner.setVisible(false);
+		Loser.setVisible(false);
+		NMLives.setVisible(false);
 	}
 
 	/**
@@ -119,15 +141,17 @@ public class SudokuController implements Initializable {
 		hboxGrid.getChildren().clear(); // Clear any controls in the VBox
 		// hboxGrid.getStyleClass().add("VBoxGameGrid");
 		hboxGrid.getChildren().add(gridSudoku);
-
+		
 		// Clear the hboxNumbers, add the numbers
 		GridPane gridNumbers = BuildNumbersGrid();
-
+		
+		
 		hboxNumbers.getChildren().clear();
 		hboxNumbers.setPadding((new Insets(25, 25, 25, 25)));
 		hboxNumbers.getChildren().add(gridNumbers);
-
+		
 	}
+	
 
 	/**
 	 * BuildTopGrid - This is the grid at the top of the scene.  I'd stash 'difficulty', {@link #btnStartGame(ActionEvent)}of mistakes, etc
@@ -141,7 +165,15 @@ public class SudokuController implements Initializable {
 
 		Label lblDifficulty = new Label(eGD.toString());
 		gpTop.add(lblDifficulty, 0, 0);
-
+		gpTop.add(Winner, 1, 0);
+		gpTop.add(Loser, 1, 0);
+		gpTop.add(Lives, 2, 0);
+		gpTop.add(NMLives, 1, 0);
+		LivesR = new Label(Integer.toString(eGD.getChances()-s.getMistakes()));
+		gpTop.add(LivesR, 2, 1);
+		
+		
+		
 		ColumnConstraints colCon = new ColumnConstraints();
 		colCon.halignmentProperty().set(HPos.CENTER);
 		gpTop.getColumnConstraints().add(colCon);
@@ -151,6 +183,7 @@ public class SudokuController implements Initializable {
 		gpTop.getRowConstraints().add(rowCon);
 
 		gpTop.getStyleClass().add("GridPaneInsets");
+		
 	}
 
 	/**
@@ -167,17 +200,24 @@ public class SudokuController implements Initializable {
 		GridPane gridPaneNumbers = new GridPane();
 		gridPaneNumbers.setCenterShape(true);
 		gridPaneNumbers.setMaxWidth(iCellSize + 15);
-		for (int iCol = 0; iCol < s.getiSize(); iCol++) {
+		
+		for (int iCol = 0; iCol <= s.getiSize(); iCol++) {
 
 			gridPaneNumbers.getColumnConstraints().add(SudokuStyler.getGenericColumnConstraint(iCellSize));
 			SudokuCell paneSource = new SudokuCell(new Cell(0, iCol));
-
-			ImageView iv = new ImageView(GetImage(iCol + 1));
-			paneSource.getCell().setiCellValue(iCol + 1);
+			if(iCol==s.getiSize()) {
+				ImageView iv = new ImageView("file:C:\\Users\\Brandon Wu\\git\\SudokuLab6Start\\SudokuJavaFX\\src\\main\\resources\\img\\eraser.png");
+				paneSource.getCell().setiCellValue(iCol+1);
+				paneSource.getChildren().add(iv);
+			}
+			else {
+			ImageView iv = new ImageView(GetImage(iCol+1));
+			paneSource.getCell().setiCellValue(iCol+1 );
 			paneSource.getChildren().add(iv);
+			}
 
 			paneSource.getStyleClass().clear(); // Clear any errant styling in the pane
-
+			
 			// Set a event handler to fire if the pane was clicked
 			paneSource.setOnMouseClicked(e -> {
 				System.out.println(paneSource.getCell().getiCellValue());
@@ -191,22 +231,29 @@ public class SudokuController implements Initializable {
 			//	implement a simliar method
 			paneSource.setOnDragDetected(new EventHandler<MouseEvent>() {
 				public void handle(MouseEvent event) {
+					
+						/* allow any transfer mode */
+						Dragboard db = paneSource.startDragAndDrop(TransferMode.ANY);
 
-					/* allow any transfer mode */
-					Dragboard db = paneSource.startDragAndDrop(TransferMode.ANY);
-
-					/* put a string on dragboard */
-					// Put the Cell on the clipboard, on the other side, cast as a cell
-					ClipboardContent content = new ClipboardContent();
-					content.put(myFormat, paneSource.getCell());
-					db.setContent(content);
-					event.consume();
-				}
+						/* put a string on dragboard */
+						// Put the Cell on the clipboard, on the other side, cast as a cell
+						ClipboardContent content = new ClipboardContent();
+						content.put(myFormat, paneSource.getCell());
+						db.setContent(content);
+						event.consume();
+					}
+					
+				//}
 			});
 
 			// Add the pane to the grid
+			
 			gridPaneNumbers.add(paneSource, iCol, 0);
+			
 		}
+		
+		
+		
 		return gridPaneNumbers;
 	}
 
@@ -259,15 +306,20 @@ public class SudokuController implements Initializable {
 				paneTarget.setOnMouseClicked(e -> {
 					System.out.println(paneTarget.getCell().getiCellValue());
 				});
-
+				
+				
+		
+				
+				
 				// Fire this method as something is being dragged over a cell
 				// I'm checking the cell value... if it's not zero... don't let it be dropped
 				// (show the circle-with-line-through)
 				paneTarget.setOnDragOver(new EventHandler<DragEvent>() {
-					public void handle(DragEvent event) {
-						if (event.getGestureSource() != paneTarget && event.getDragboard().hasContent(myFormat)) {
+					public void handle(DragEvent event) {						
+						Cell CellFrom = (Cell) event.getDragboard().getContent(myFormat);
+						if (event.getGestureSource() != paneTarget&& event.getDragboard().hasContent(myFormat)) {
 							// Don't let the user drag over items that already have a cell value set
-							if (paneTarget.getCell().getiCellValue() == 0) {
+							if (paneTarget.getCell().getiCellValue() == 0 ||CellFrom.getiCellValue()==s.getiSize()+1) {
 								event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
 							}
 						}
@@ -279,7 +331,7 @@ public class SudokuController implements Initializable {
 				paneTarget.setOnDragEntered(new EventHandler<DragEvent>() {
 					public void handle(DragEvent event) {
 						/* show to the user that it is an actual gesture target */
-						if (event.getGestureSource() != paneTarget && event.getDragboard().hasContent(myFormat)) {
+						if (event.getGestureSource() != paneTarget&& event.getDragboard().hasContent(myFormat)) {
 							Dragboard db = event.getDragboard();
 							Cell CellFrom = (Cell) db.getContent(myFormat);
 							Cell CellTo = (Cell) paneTarget.getCell();
@@ -294,6 +346,7 @@ public class SudokuController implements Initializable {
 						event.consume();
 					}
 				});
+				
 
 				paneTarget.setOnDragExited(new EventHandler<DragEvent>() {
 					public void handle(DragEvent event) {
@@ -312,7 +365,6 @@ public class SudokuController implements Initializable {
 						Dragboard db = event.getDragboard();
 						boolean success = false;
 						Cell CellTo = (Cell) paneTarget.getCell();
-
 						//TODO: This is where you'll find mistakes.  
 						//		Keep track of mistakes... as an attribute of Sudoku... start the attribute
 						//		at zero, and expose a AddMistake(int) method in Sudoku to add the mistake
@@ -321,23 +373,76 @@ public class SudokuController implements Initializable {
 						//		If the number of mistakes >= max mistakes, end the game
 						if (db.hasContent(myFormat)) {
 							Cell CellFrom = (Cell) db.getContent(myFormat);
-
+							System.out.println(CellTo.getiCellValue());
+							//If eraser is being used on a filled cell, this will cost a life.
+							if(CellTo.getiCellValue()!=0) {
+								Loser.setVisible(false);
+								s.addMistake();
+								
+								gpTop.getChildren().clear();
+								//removes one life, getChildren.remove(arg0,arg1) wasn't working
+								BuildTopGrid(eGD);
+								
+								if(s.getMistakes()==eGD.getChances()) {
+									NMLives.setVisible(true);
+									System.out.println("You lose");
+								}
+								s.addZero();
+								s.getPuzzle()[CellTo.getiRow()][CellTo.getiCol()]=0;
+								s.PrintPuzzle();
+								paneTarget.getCell().setiCellValue(0);
+								paneTarget.getChildren().clear();
+								System.out.println("Mistakes " + s.getMistakes());
+								success = true;
+							}
+							//If eraser is being used on an empty cell.
+							else if(CellFrom.getiCellValue() == s.getiSize()+1) {
+								
+							}
+							//If a number is being dragged.
+							else{
+								s.removeZero();
+								System.out.println("Zeros remaining " +s.getZeros());		
+							//Check to see if the cell is valid. If game hints are on, a life is lost.
 							if (!s.isValidValue(CellTo.getiRow(), CellTo.getiCol(), CellFrom.getiCellValue())) {
 								if (game.getShowHints()) {
-
+									s.addMistake();
+									gpTop.getChildren().clear();
+									//removes one life, getChildren.remove(arg0,arg1) wasn't working
+									BuildTopGrid(eGD);
+									if(s.getMistakes()==eGD.getChances()) {
+										NMLives.setVisible(true);
+										
+										System.out.println("You lose");
+									}
 								}
 
 							}
-
+							s.getPuzzle()[CellTo.getiRow()][CellTo.getiCol()] = CellFrom.getiCellValue();
+							s.PrintPuzzle();
+							System.out.println("Mistakes " + s.getMistakes());
+							if(s.getZeros()==0) {
+								System.out.println(s.isSudoku());
+								if(s.isSudoku()) {
+									Winner.setVisible(true);
+									System.out.println("You win");
+								}
+								else {
+									Loser.setVisible(true);
+								}
+							}
 							//	This is the code that is actually taking the cell value from the drag-from 
 							//	cell and dropping a new Image into the dragged-to cell
+							
 							ImageView iv = new ImageView(GetImage(CellFrom.getiCellValue()));
 							paneTarget.getCell().setiCellValue(CellFrom.getiCellValue());
 							paneTarget.getChildren().clear();
 							paneTarget.getChildren().add(iv);
 							System.out.println(CellFrom.getiCellValue());
 							success = true;
+							}
 						}
+						
 						event.setDropCompleted(success);
 						event.consume();
 					}

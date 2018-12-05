@@ -164,5 +164,27 @@ public class SudokuTest {
 			fail("Test failed to build a Sudoku");
 		}
 	}
+	@Test
+	public void Sudoku_Default_Mistake_Test()
+	{
+		try {
+			Sudoku s1 = new Sudoku(9, eGameDifficulty.HARD);
+			assertEquals(s1.getMistakes(),0);
 
+		} catch (Exception e) {
+			fail("Test failed to build a Sudoku");
+		}
+	}
+	@Test
+	public void Sudoku_Zero_Count_Test() {
+		try {
+			int[][] puzzle = { { 0,0,0,0}, {0,0,0,0}, { 0,0,0,0}, { 0,0,0,0} };
+			Sudoku s1 = new Sudoku(puzzle);
+			assertEquals(s1.getZeroCount(),16);
+		}catch(Exception e) {
+			fail("Test failded to build a Sudoku");
+		}
+	}
+		
+	
 }
