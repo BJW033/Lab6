@@ -373,26 +373,23 @@ public class SudokuController implements Initializable {
 						//		If the number of mistakes >= max mistakes, end the game
 						if (db.hasContent(myFormat)) {
 							Cell CellFrom = (Cell) db.getContent(myFormat);
-							System.out.println(CellTo.getiCellValue());
 							//If eraser is being used on a filled cell, this will cost a life.
 							if(CellTo.getiCellValue()!=0) {
 								Loser.setVisible(false);
 								s.addMistake();
 								
 								gpTop.getChildren().clear();
-								//removes one life, getChildren.remove(arg0,arg1) wasn't working
+								//getChildren.remove(arg0,arg1) wasn't working
 								BuildTopGrid(eGD);
 								
 								if(s.getMistakes()==eGD.getChances()) {
 									NMLives.setVisible(true);
-									System.out.println("You lose");
+									
 								}
 								s.addZero();
 								s.getPuzzle()[CellTo.getiRow()][CellTo.getiCol()]=0;
-								s.PrintPuzzle();
 								paneTarget.getCell().setiCellValue(0);
 								paneTarget.getChildren().clear();
-								System.out.println("Mistakes " + s.getMistakes());
 								success = true;
 							}
 							//If eraser is being used on an empty cell.
@@ -402,30 +399,24 @@ public class SudokuController implements Initializable {
 							//If a number is being dragged.
 							else{
 								s.removeZero();
-								System.out.println("Zeros remaining " +s.getZeros());		
 							//Check to see if the cell is valid. If game hints are on, a life is lost.
 							if (!s.isValidValue(CellTo.getiRow(), CellTo.getiCol(), CellFrom.getiCellValue())) {
 								if (game.getShowHints()) {
 									s.addMistake();
 									gpTop.getChildren().clear();
-									//removes one life, getChildren.remove(arg0,arg1) wasn't working
+									//getChildren.remove(arg0,arg1) wasn't working
 									BuildTopGrid(eGD);
 									if(s.getMistakes()==eGD.getChances()) {
 										NMLives.setVisible(true);
 										
-										System.out.println("You lose");
 									}
 								}
 
 							}
 							s.getPuzzle()[CellTo.getiRow()][CellTo.getiCol()] = CellFrom.getiCellValue();
-							s.PrintPuzzle();
-							System.out.println("Mistakes " + s.getMistakes());
 							if(s.getZeros()==0) {
-								System.out.println(s.isSudoku());
 								if(s.isSudoku()) {
 									Winner.setVisible(true);
-									System.out.println("You win");
 								}
 								else {
 									Loser.setVisible(true);
@@ -438,7 +429,6 @@ public class SudokuController implements Initializable {
 							paneTarget.getCell().setiCellValue(CellFrom.getiCellValue());
 							paneTarget.getChildren().clear();
 							paneTarget.getChildren().add(iv);
-							System.out.println(CellFrom.getiCellValue());
 							success = true;
 							}
 						}
